@@ -1,0 +1,83 @@
+.data
+	entero: .space 4
+	msgTitulo: .asciiz "********** NUMEROS PRIMOS **********\nEl programa lista los numeros primos desde 0 hasta un limite.\n"
+	msgPedirNum: .asciiz "Escriba el limite: "
+	espacio: .asciiz ", "
+	msgPrimo: .asciiz " es primo."
+	msgNoPrimo: .asciiz " no es primo."
+	
+	spc: .asciiz "\n"
+	msg: .asciiz "\nTiempo total: "
+	
+.text
+main:
+	li $v0, 4
+	la $a0, msgTitulo
+	syscall
+	la $a0, msgPedirNum
+	syscall
+	li $v0, 5
+	syscall
+	add $t7, $zero, $v0 # Se guarda el numero ingresado en t0
+	
+	#---------------------------------
+	li $v0, 30
+	syscall
+	move $t5, $a0
+	#---------------------------------
+	
+	addi $t0, $zero, 2
+	bucle1:
+		blt $t7, $t0, fin
+		jal verificarPrimo
+		addi $t0, $t0, 1
+		b bucle1
+	
+	
+verificarPrimo: # Retorna $v1 = 0 si no es primo y $v1 = 1 si es primo | ARGUMENTOS: $t0
+	add $t1, $zero, 2 # t1 = 2 -> DIVISOR
+	div $t0, $t1 # t0/t1 --> cociente en LO y residuo en HI
+	mfhi $t2 # t2 = residuo
+	mflo $t3 # t3 = cociente = numeroIngresado/2
+	move $a0, $t0
+	beq $t0, 2, esPrimo # 2 es el unico numero par primo
+	beq $t0, 3, esPrimo # 3 es un numero primo
+	beqz $t2, esNoPrimo
+	add $t1, $zero, 3 # t1 = 3 -> DIVISOR
+	
+	bucle2:
+div $t0, $t1 # t0/t1 --> cociente en LO y residuo en HI
+		mfhi $t2 # t2 = residuo
+		beqz $t2, esNoPrimo
+		bgt $t1, $t3, esPrimo
+		add $t1, $t1, 2 # t1 = t1 + 2
+		b bucle2
+
+esPrimo: # Elparametro de numero esta $a0
+	li $v0, 1
+	syscall
+	li $v0, 4
+	la $a0, espacio
+	syscall
+	jr $ra
+
+esNoPrimo: # Elparametro de numero esta $a0
+	jr $ra
+	
+fin:
+	#-------------------------------------
+	li $v0, 30
+	syscall
+	move $t6, $a0
+	
+	li $v0, 4
+	la $a0, msg
+	syscall
+	
+	li $v0, 1
+	sub $a0, $t6, $t5
+	syscall
+	#-------------------------------------	
+	li $v0, 10
+	syscall
+
